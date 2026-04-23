@@ -70,7 +70,7 @@
 | **스타일** | Tailwind CSS |
 | **상태관리** | Jotai (atom 기반 전역 상태), Custom Hook (비즈니스 로직 분리) |
 | **HTTP 클라이언트** | Axios |
-| **AI 도구** | Cursor, Ai Studio |
+| **AI 도구** | Cursor, Google AI Studio |
 
 ### Backend
 
@@ -82,7 +82,7 @@
 | **인증** | Spring Security + JWT |
 | **스케줄러** | Spring Scheduler (@Scheduled) |
 | **빌드 툴** | Gradle |
-| **AI 도구** | Cursor, Ai Studio |
+| **AI 도구** | Cursor, Google AI Studio |
 
 ### DB / Infra
 
