@@ -1,0 +1,36 @@
+# ==========================================
+# BrewFlow Monorepo Global Gitignore
+# ==========================================
+
+# --- OS / IDE ---
+.metadata
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.bak
+
+# --- Backend (Spring Boot) ---
+backend/.gradle/
+backend/build/
+backend/bin/
+backend/out/
+backend/.gradle-proxy-config
+backend/src/main/resources/application-*.yml
+backend/src/main/resources/application-*.properties
+backend/*.jar
+
+# --- Frontend (React / Vite) ---
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/*.local
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+
+# --- Logs & Temp ---
+*.log
+logs/
+temp/
