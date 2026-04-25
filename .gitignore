@@ -1,10 +1,24 @@
+# ==========================================
+# BrewFlow Monorepo Global Gitignore
+# ==========================================
+
 # --- OS / IDE ---
 .DS_Store
 .idea/
 .vscode/
 *.swp
 
-# --- 빌드 및 실행 결과물 (Wildcard 사용으로 관리 일관성) ---
+# --- Eclipse / STS Specific ---
+.metadata/
+.settings/
+.classpath
+.project
+.factorypath
+.springBeans
+.sts4-cache/
+bin/
+
+# --- 빌드 및 실행 결과물 ---
 **/build/
 **/bin/
 **/out/
@@ -12,9 +26,9 @@
 *.jar
 
 # --- 백엔드 (Secrets 방어) ---
-# 로컬이나 배포 서버용 설정 파일이 실수로 올라가는 것을 방지
 backend/src/main/resources/application-*.yml
 backend/src/main/resources/application-*.properties
+backend/HELP.md
 
 # --- 프론트엔드 ---
 **/node_modules/
@@ -24,6 +38,3 @@ frontend/.env*
 
 # --- 로그 ---
 *.log
-
-# --- Metadata ---
-.metadata/
