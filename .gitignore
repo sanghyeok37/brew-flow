@@ -24,3 +24,6 @@ frontend/.env*
 
 # --- 로그 ---
 *.log
+
+# --- Metadata ---
+.metadata/
