@@ -1,0 +1,52 @@
+spring:
+  profiles:
+    active: local 
+  threads:
+    virtual:
+      enabled: true  
+
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      pool-name: BrewFlow-HikariCP
+      connection-timeout: 3000
+
+
+mybatis:
+  type-aliases-package: com.brewflow.backend.dto,com.brewflow.backend.vo
+  configuration:
+    map-underscore-to-camel-case: true
+    jdbc-type-for-null: "NULL"
+  mapper-locations: classpath:mapper/**/*.xml
+
+springdoc:
+  api-docs:
+    enabled: true
+  packages-to-scan: com.brewflow.backend.controller
+  swagger-ui:
+    path: /api.html
+
+custom:
+  jwt:
+    key-str: ${JWT_SECRET_KEY}
+    issuer: BrewFlow
+    expiration: 86400000
+    refresh-expiration: 28
+    renewal-limit: 10
+
+
+logging:
+  level:
+    root: WARN
+    com.brewflow.backend: DEBUG

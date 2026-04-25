@@ -23,7 +23,7 @@ spring:
       connection-timeout: 10000
 
 mybatis:
-  type-aliases-package: com.brewflow.backend.dto,com.brewflow.backend.vo
+  type-aliases-package: com.brewflow.api.dto,com.brewflow.api.vo
   configuration:
     log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
     map-underscore-to-camel-case: true
@@ -33,7 +33,7 @@ mybatis:
 springdoc:
   api-docs:
     enabled: true
-  packages-to-scan: com.brewflow.backend.controller
+  packages-to-scan: com.brewflow.api.controller
   swagger-ui:
     path: /api.html
 
@@ -48,9 +48,9 @@ custom:
 logging:
   level:
     root: WARN
-    com.brewflow.backend: DEBUG
+    com.brewflow.api: DEBUG
     org.springframework.web: INFO
-    com.brewflow.backend.mapper: DEBUG
+    com.brewflow.api.mapper: DEBUG
 
 management:
   endpoints:
