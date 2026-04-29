@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.brewflow.api.mapper.StatsMapper">
+
+    <resultMap id="WeeklyStatMap" type="WeeklyStat">
+        <id property="statId" column="stat_id"/>
+        <result property="storeId" column="store_id"/>
+        <result property="baseWeek" column="base_week"/>
+        <result property="totalPoCount" column="total_po_count"/>
+        <result property="totalPoAmount" column="total_po_amount"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <resultMap id="PurchaseOrderMap" type="com.brewflow.api.domain.PurchaseOrder">
+        <id property="poId" column="po_id"/>
+        <result property="storeId" column="store_id"/>
+        <result property="totalAmount" column="total_amount"/>
+        <result property="status" column="status"/>
+        <result property="orderedAt" column="ordered_at"/>
+        <result property="deliveredAt" column="delivered_at"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <select id="findMonthlyOrders" parameterType="map" resultMap="PurchaseOrderMap">
+        SELECT *
+        FROM purchase_orders
+        WHERE store_id = #{storeId}
+          AND status IN ('ORDERED', 'DELIVERED')
+          AND ordered_at IS NOT NULL
+          AND YEAR(ordered_at) = #{year}
+          AND MONTH(ordered_at) = #{month}
+    </select>
+
+    <select id="findWeeklyStats" parameterType="map" resultMap="WeeklyStatMap">
+        SELECT * FROM po_weekly_stats
+        WHERE store_id = #{storeId}
+        ORDER BY 
+        <choose>
+            <when test="orderBy == 'oldest'">base_week ASC</when>
+            <when test="orderBy == 'amount'">total_po_amount DESC</when>
+            <otherwise>base_week DESC</otherwise>
+        </choose>
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countWeeklyStats" resultType="long">
+        SELECT COUNT(*) FROM po_weekly_stats
+        WHERE store_id = #{storeId}
+    </select>
+
+    <select id="findStoreIdsWithOrders" resultType="long">
+        SELECT DISTINCT store_id
+        FROM purchase_orders
+    </select>
+
+    <select id="findOrdersInRange" parameterType="map" resultMap="PurchaseOrderMap">
+        SELECT *
+        FROM purchase_orders
+        WHERE store_id = #{storeId}
+          AND status IN ('ORDERED', 'DELIVERED')
+          AND ordered_at IS NOT NULL
+          AND ordered_at &gt;= #{from}
+          AND ordered_at &lt; #{to}
+    </select>
+
+    <insert id="upsertWeeklyStat" parameterType="map">
+        INSERT INTO po_weekly_stats (store_id, base_week, total_po_count, total_po_amount)
+        VALUES (#{storeId}, #{baseWeek}, #{totalPoCount}, #{totalPoAmount})
+        ON DUPLICATE KEY UPDATE
+            total_po_count = VALUES(total_po_count),
+            total_po_amount = VALUES(total_po_amount)
+    </insert>
+
+</mapper>

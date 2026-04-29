@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.brewflow.api.mapper.AuthMapper">
+
+    <resultMap id="UserMap" type="User">
+        <id property="userId" column="user_id"/>
+        <result property="username" column="username"/>
+        <result property="name" column="name"/>
+        <result property="nickname" column="nickname"/>
+        <result property="contact" column="contact"/>
+        <result property="email" column="email"/>
+        <result property="password" column="password"/>
+        <result property="role" column="role"/>
+        <result property="status" column="status"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <resultMap id="CertMap" type="Cert">
+        <id property="email" column="email"/>
+        <result property="certNumber" column="cert_number"/>
+        <result property="certTime" column="cert_time"/>
+        <result property="expiresAt" column="expires_at"/>
+    </resultMap>
+
+    <resultMap id="RefreshTokenMap" type="RefreshToken">
+        <id property="tokenId" column="token_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="token" column="token"/>
+        <result property="expiresAt" column="expires_at"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <resultMap id="StoreMap" type="Store">
+        <id property="storeId" column="store_id"/>
+        <result property="storeCode" column="store_code"/>
+        <result property="brandCode" column="brand_code"/>
+        <result property="name" column="name"/>
+        <result property="type" column="type"/>
+        <result property="status" column="status"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="findUserByUsername" parameterType="string" resultMap="UserMap">
+        SELECT *
+        FROM users
+        WHERE username = #{username}
+          AND status = 'ACTIVE'
+    </select>
+
+    <select id="findUserByEmail" parameterType="string" resultMap="UserMap">
+        SELECT *
+        FROM users
+        WHERE email = #{email}
+          AND status = 'ACTIVE'
+    </select>
+
+    <select id="findUserById" parameterType="long" resultMap="UserMap">
+        SELECT *
+        FROM users
+        WHERE user_id = #{userId}
+          AND status = 'ACTIVE'
+    </select>
+
+
+    <insert id="insertUser" parameterType="com.brewflow.api.domain.User" useGeneratedKeys="true" keyProperty="userId">
+        INSERT INTO users (username, name, nickname, contact, email, password, role, status)
+        VALUES (#{username}, #{name}, #{nickname}, #{contact}, #{email}, #{password}, #{role}, 'ACTIVE')
+    </insert>
+
+    <select id="findStoreIdByStoreCode" parameterType="string" resultType="long">
+        SELECT store_id
+        FROM stores
+        WHERE store_code = #{storeCode}
+          AND status = 'OPEN'
+    </select>
+
+    <select id="findStoreById" parameterType="long" resultMap="StoreMap">
+        SELECT *
+        FROM stores
+        WHERE store_id = #{storeId}
+    </select>
+
+    <select id="findStoreByCode" parameterType="string" resultMap="StoreMap">
+        SELECT *
+        FROM stores
+        WHERE store_code = #{storeCode}
+    </select>
+
+    <insert id="insertUsersStores" parameterType="map">
+        INSERT INTO users_stores (user_id, store_id)
+        VALUES (#{userId}, #{storeId})
+    </insert>
+
+    <select id="findStoreIdsByUserId" parameterType="long" resultType="long">
+        SELECT store_id
+        FROM users_stores
+        WHERE user_id = #{userId}
+    </select>
+
+    <select id="findMainStoreByUserId" parameterType="long" resultMap="StoreMap">
+        SELECT s.*
+        FROM stores s
+        JOIN users_stores us ON us.store_id = s.store_id
+        WHERE us.user_id = #{userId}
+        LIMIT 1
+    </select>
+
+    <insert id="insertCert" parameterType="com.brewflow.api.domain.Cert">
+        INSERT INTO cert (email, cert_number, cert_time)
+        VALUES (#{email}, #{certNumber}, CURRENT_TIMESTAMP(3))
+    </insert>
+
+    <select id="findCertByEmail" parameterType="string" resultMap="CertMap">
+        SELECT email, cert_number, cert_time, expires_at
+        FROM cert
+        WHERE email = #{email}
+    </select>
+
+    <delete id="deleteCertByEmail" parameterType="string">
+        DELETE FROM cert WHERE email = #{email}
+    </delete>
+
+    <insert id="insertRefreshToken" parameterType="com.brewflow.api.domain.RefreshToken">
+        INSERT INTO refresh_tokens (user_id, token, expires_at)
+        VALUES (#{userId}, #{token}, #{expiresAt})
+    </insert>
+
+    <select id="findRefreshToken" parameterType="string" resultMap="RefreshTokenMap">
+        SELECT *
+        FROM refresh_tokens
+        WHERE token = #{token}
+    </select>
+
+    <delete id="deleteRefreshTokensByUserId" parameterType="long">
+        DELETE FROM refresh_tokens WHERE user_id = #{userId}
+    </delete>
+
+    <delete id="deleteRefreshToken" parameterType="string">
+        DELETE FROM refresh_tokens WHERE token = #{token}
+    </delete>
+
+    <update id="updateUserPassword" parameterType="map">
+        UPDATE users
+        SET password = #{encodedPassword}
+        WHERE user_id = #{userId}
+    </update>
+
+    <update id="updateUser" parameterType="com.brewflow.api.domain.User">
+        UPDATE users
+        SET name = #{name},
+            nickname = #{nickname},
+            contact = #{contact},
+            status = #{status}
+        WHERE user_id = #{userId}
+    </update>
+
+    <delete id="deleteExpiredRefreshTokens" parameterType="java.time.LocalDateTime">
+        DELETE FROM refresh_tokens
+        WHERE expires_at &lt;= #{now}
+    </delete>
+
+    <delete id="deleteExpiredCerts" parameterType="java.time.LocalDateTime">
+        DELETE FROM cert
+        WHERE expires_at &lt;= #{now}
+    </delete>
+
+
+</mapper>

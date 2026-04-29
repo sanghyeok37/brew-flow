@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.brewflow.api.mapper.ProductMapper">
+    <insert id="insert" parameterType="Product" useGeneratedKeys="true" keyProperty="productId">
+        INSERT INTO products (category_id, brand_code, name, unit, unit_cost, status)
+        VALUES (#{categoryId}, #{brandCode}, #{name}, #{unit}, #{unitCost}, #{status})
+    </insert>
+
+    <update id="update" parameterType="Product">
+        UPDATE products
+        SET category_id = #{categoryId},
+            name = #{name},
+            unit = #{unit},
+            unit_cost = #{unitCost}
+        WHERE product_id = #{productId}
+    </update>
+
+    <select id="findById" resultType="Product">
+        SELECT p.*, 
+               (SELECT file_path FROM attachments WHERE parent_id = p.product_id AND category = 'PRODUCT' ORDER BY attachment_id DESC LIMIT 1) as image_url
+        FROM products p
+        WHERE p.product_id = #{productId}
+    </select>
+
+    <select id="findAvailableProducts" resultType="Product">
+        SELECT p.*, 
+               (SELECT file_path FROM attachments WHERE parent_id = p.product_id AND category = 'PRODUCT' ORDER BY attachment_id DESC LIMIT 1) as image_url
+        FROM products p
+        <where>
+            <if test="brandCode != null">
+                (p.brand_code = #{brandCode} <if test="includeCommon">OR p.brand_code = 'ADM' OR p.brand_code IS NULL</if>)
+            </if>
+            <if test="brandCode == null">
+                <if test="!includeCommon">1=1</if>
+                <if test="includeCommon">(p.brand_code = 'ADM' OR p.brand_code IS NULL)</if>
+            </if>
+        </where>
+        ORDER BY p.product_id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countAvailableProducts" resultType="long">
+        SELECT COUNT(*) FROM products 
+        <where>
+            <if test="brandCode != null">
+                (brand_code = #{brandCode} <if test="includeCommon">OR brand_code = 'ADM' OR brand_code IS NULL</if>)
+            </if>
+            <if test="brandCode == null">
+                <if test="!includeCommon">1=1</if>
+                <if test="includeCommon">(brand_code = 'ADM' OR brand_code IS NULL)</if>
+            </if>
+        </where>
+    </select>
+
+    <delete id="delete">
+        DELETE FROM products WHERE product_id = #{productId}
+    </delete>
+</mapper>

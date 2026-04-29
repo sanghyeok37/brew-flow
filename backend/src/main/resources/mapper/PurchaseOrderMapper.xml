@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.brewflow.api.mapper.PurchaseOrderMapper">
+
+    <!-- 1:N 계층 구조 조립을 위한 리절트맵 -->
+    <resultMap id="FullOrderViewMap" type="PurchaseOrderView">
+        <id property="poId" column="po_id"/>
+        <result property="storeId" column="store_id"/>
+        <result property="totalAmount" column="total_amount"/>
+        <result property="status" column="status"/>
+        <result property="orderedAt" column="ordered_at"/>
+        <result property="deliveredAt" column="delivered_at"/>
+        <result property="createdAt" column="order_created_at"/> <!-- 필드명이 달라서 명시 -->
+        <collection property="items" ofType="com.brewflow.api.domain.PurchaseOrderView$PurchaseOrderItemView">
+            <result property="productId" column="product_id"/>
+            <result property="productName" column="product_name"/>
+            <result property="unit" column="unit"/>
+            <result property="orderQty" column="order_qty"/>
+            <result property="unitCostSnapshot" column="unit_cost_snapshot"/>
+        </collection>
+    </resultMap>
+
+    <select id="findPendingPoIdByStoreAndProduct" parameterType="map" resultType="long">
+        SELECT poi.po_id
+        FROM purchase_orders po
+            JOIN purchase_order_items poi ON poi.po_id = po.po_id
+        WHERE po.store_id = #{storeId}
+          AND po.status = 'PENDING'
+          AND poi.product_id = #{productId}
+        LIMIT 1
+    </select>
+
+    <insert id="insertPurchaseOrder" parameterType="PurchaseOrder" useGeneratedKeys="true" keyProperty="poId">
+        INSERT INTO purchase_orders (store_id, total_amount, status)
+        VALUES (#{storeId}, #{totalAmount}, #{status})
+    </insert>
+
+    <insert id="insertPurchaseOrderItem" parameterType="PurchaseOrderItem" useGeneratedKeys="true" keyProperty="poItemId">
+        INSERT INTO purchase_order_items (po_id, product_id, order_qty, unit_cost_snapshot)
+        VALUES (#{poId}, #{productId}, #{orderQty}, #{unitCostSnapshot})
+    </insert>
+
+    <select id="findOrderIdsByStore" parameterType="map" resultType="long">
+        SELECT po_id
+        FROM purchase_orders
+        WHERE store_id = #{storeId}
+        <if test="status != null and status != '' and status != 'ALL'">
+            AND status = #{status}
+        </if>
+        <if test="startDate != null">
+            AND created_at &gt;= #{startDate}
+        </if>
+        <if test="endDate != null">
+            AND created_at &lt;= #{endDate}
+        </if>
+        ORDER BY po_id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="findOrdersByIds" parameterType="map" resultMap="FullOrderViewMap">
+        SELECT *
+        FROM v_purchase_order_details
+        WHERE po_id IN
+        <foreach item="id" collection="poIds" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        ORDER BY po_id DESC
+    </select>
+
+    <select id="countOrdersByStore" parameterType="map" resultType="long">
+        SELECT COUNT(*)
+        FROM purchase_orders
+        WHERE store_id = #{storeId}
+        <if test="status != null and status != '' and status != 'ALL'">
+            AND status = #{status}
+        </if>
+        <if test="startDate != null">
+            AND created_at &gt;= #{startDate}
+        </if>
+        <if test="endDate != null">
+            AND created_at &lt;= #{endDate}
+        </if>
+    </select>
+
+    <select id="countOrdersByStatuses" parameterType="map" resultType="long">
+        SELECT COUNT(*)
+        FROM purchase_orders
+        WHERE store_id = #{storeId}
+          AND status IN
+          <foreach item="s" collection="statuses" open="(" separator="," close=")">
+              #{s}
+          </foreach>
+    </select>
+
+    <select id="findOrderItems" parameterType="long" resultType="com.brewflow.api.domain.PurchaseOrderView$PurchaseOrderItemView">
+        SELECT
+            product_id,
+            product_name,
+            unit,
+            order_qty,
+            unit_cost_snapshot
+        FROM v_purchase_order_details
+        WHERE po_id = #{poId}
+        ORDER BY product_name ASC
+    </select>
+
+    <select id="findOrderHeaderForUpdate" parameterType="long" resultType="PurchaseOrderView">
+        SELECT po_id, store_id, total_amount, status, ordered_at, delivered_at, created_at
+        FROM purchase_orders
+        WHERE po_id = #{poId}
+        FOR UPDATE
+    </select>
+
+    <update id="updateOrderTotalAmount" parameterType="map">
+        UPDATE purchase_orders
+        SET total_amount = #{totalAmount}
+        WHERE po_id = #{poId}
+    </update>
+
+    <update id="updateOrderItemQty" parameterType="map">
+        UPDATE purchase_order_items
+        SET order_qty = #{orderQty}
+        WHERE po_id = #{poId}
+          AND product_id = #{productId}
+    </update>
+
+    <update id="cancelPending" parameterType="long">
+        UPDATE purchase_orders
+        SET status = 'CANCELED'
+        WHERE po_id = #{poId}
+          AND status = 'PENDING'
+    </update>
+
+    <select id="findPendingPoIds" resultType="long">
+        SELECT po_id
+        FROM purchase_orders
+        WHERE status = 'PENDING'
+    </select>
+
+    <update id="markOrdered" parameterType="map">
+        UPDATE purchase_orders
+        SET status = 'ORDERED',
+            ordered_at = #{orderedAt}
+        WHERE po_id = #{poId}
+          AND status = 'PENDING'
+    </update>
+
+    <select id="findOrderStatus" parameterType="long" resultType="string">
+        SELECT status
+        FROM purchase_orders
+        WHERE po_id = #{poId}
+    </select>
+
+    <update id="markDelivered" parameterType="map">
+        UPDATE purchase_orders
+        SET status = 'DELIVERED',
+            delivered_at = #{deliveredAt}
+        WHERE po_id = #{poId}
+          AND status = 'ORDERED'
+    </update>
+
+    <select id="findItemsForInbound" parameterType="long" resultType="PurchaseOrderItem">
+        SELECT po_item_id, po_id, product_id, order_qty, unit_cost_snapshot
+        FROM purchase_order_items
+        WHERE po_id = #{poId}
+        ORDER BY po_item_id ASC
+    </select>
+
+    <select id="findOrderById" parameterType="long" resultMap="FullOrderViewMap">
+        SELECT *
+        FROM v_purchase_order_details
+        WHERE po_id = #{poId}
+    </select>
+
+    <select id="getMonthlyOrderAmount" resultType="long">
+        SELECT COALESCE(SUM(total_amount), 0)
+        FROM purchase_orders
+        WHERE store_id = #{storeId}
+          AND status != 'CANCELED'
+          AND created_at &gt;= #{startDate}
+          AND created_at &lt; #{endDate}
+    </select>
+
+    <select id="getMonthlyOrderAmountByStatuses" resultType="long">
+        SELECT COALESCE(SUM(total_amount), 0)
+        FROM purchase_orders
+        WHERE store_id = #{storeId}
+          AND created_at &gt;= #{startDate}
+          AND created_at &lt; #{endDate}
+          AND status IN
+          <foreach item="s" collection="statuses" open="(" separator="," close=")">
+              #{s}
+          </foreach>
+    </select>
+
+    <select id="getMonthlyProductSummaries" resultType="com.brewflow.api.dto.response.MonthlyProductSummary">
+        SELECT 
+            p.name AS productName,
+            SUM(poi.order_qty) AS totalQty,
+            p.unit AS unit
+        FROM purchase_orders po
+        JOIN purchase_order_items poi ON po.po_id = poi.po_id
+        JOIN products p ON poi.product_id = p.product_id
+        WHERE po.store_id = #{storeId}
+          AND po.status != 'CANCELLED'
+          AND po.created_at &gt;= #{startDate}
+          AND po.created_at &lt; #{endDate}
+        GROUP BY p.product_id, p.name, p.unit
+        ORDER BY totalQty DESC
+    </select>
+
+    <delete id="deleteOrder" parameterType="long">
+        DELETE FROM purchase_orders WHERE po_id = #{poId}
+    </delete>
+
+</mapper>

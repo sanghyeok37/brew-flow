@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.brewflow.api.mapper.InventoryMapper">
+
+    <resultMap id="InventoryViewMap" type="StoreInventoryView">
+        <id property="inventoryId" column="inventory_id"/>
+        <result property="storeId" column="store_id"/>
+        <result property="productId" column="product_id"/>
+        <result property="currentStockQty" column="current_stock_qty"/>
+        <result property="safetyStockQty" column="safety_stock_qty"/>
+        <result property="autoOrderQty" column="auto_order_qty"/>
+
+        <result property="categoryId" column="category_id"/>
+        <result property="categoryName" column="category_name"/>
+
+        <result property="productName" column="product_name"/>
+        <result property="unit" column="unit"/>
+        <result property="unitCost" column="unit_cost"/>
+        <result property="imageUrl" column="image_url"/>
+    </resultMap>
+
+    <select id="findInventoryByStoreId" parameterType="map" resultMap="InventoryViewMap">
+        SELECT
+            si.inventory_id,
+            si.store_id,
+            si.product_id,
+            si.current_stock_qty,
+            si.safety_stock_qty,
+            si.auto_order_qty,
+            p.category_id,
+            c.name AS category_name,
+            p.name AS product_name,
+            p.unit,
+            p.unit_cost,
+            a.file_path AS image_url
+        FROM store_inventory si
+            JOIN products p ON p.product_id = si.product_id
+            JOIN categories c ON c.category_id = p.category_id
+            LEFT JOIN (
+                SELECT parent_id, MAX(file_path) AS file_path 
+                FROM attachments 
+                WHERE category = 'PRODUCT'
+                GROUP BY parent_id
+            ) a ON a.parent_id = p.product_id
+        WHERE si.store_id = #{storeId}
+        ORDER BY c.name ASC, p.name ASC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countInventoryByStoreId" parameterType="long" resultType="long">
+        SELECT COUNT(*)
+        FROM store_inventory
+        WHERE store_id = #{storeId}
+    </select>
+ 
+    <select id="countLowStockByStoreId" parameterType="long" resultType="long">
+        SELECT COUNT(*)
+        FROM store_inventory
+        WHERE store_id = #{storeId}
+          AND COALESCE(current_stock_qty, 0) &lt;= COALESCE(safety_stock_qty, 0)
+    </select>
+
+
+    <select id="findInventoryRowForUpdate" parameterType="map" resultMap="InventoryViewMap">
+        SELECT
+            si.inventory_id,
+            si.store_id,
+            si.product_id,
+            si.current_stock_qty,
+            si.safety_stock_qty,
+            si.auto_order_qty,
+            p.category_id,
+            c.name AS category_name,
+            p.name AS product_name,
+            p.unit,
+            p.unit_cost,
+            a.file_path AS image_url
+        FROM store_inventory si
+            JOIN products p ON p.product_id = si.product_id
+            JOIN categories c ON c.category_id = p.category_id
+            LEFT JOIN (
+                SELECT parent_id, MAX(file_path) AS file_path 
+                FROM attachments 
+                WHERE category = 'PRODUCT'
+                GROUP BY parent_id
+            ) a ON a.parent_id = p.product_id
+        WHERE si.store_id = #{storeId}
+          AND si.product_id = #{productId}
+        FOR UPDATE
+
+    </select>
+
+    <select id="findThresholdTargets" resultType="ThresholdTarget">
+        SELECT
+            store_id   AS storeId,
+            product_id AS productId,
+            auto_order_qty AS autoOrderQty
+        FROM store_inventory
+        WHERE current_stock_qty &lt;= safety_stock_qty
+    </select>
+
+    <update id="updateInventorySettings" parameterType="map">
+        UPDATE store_inventory
+        SET safety_stock_qty = #{safetyStockQty},
+            auto_order_qty   = #{autoOrderQty}
+        WHERE store_id = #{storeId}
+          AND product_id = #{productId}
+    </update>
+
+    <update id="updateCurrentStockQty" parameterType="map">
+        UPDATE store_inventory
+        SET current_stock_qty = #{newQty}
+        WHERE store_id = #{storeId}
+          AND product_id = #{productId}
+    </update>
+
+    <insert id="insertInventory" parameterType="map">
+        INSERT INTO store_inventory (store_id, product_id, current_stock_qty, safety_stock_qty, auto_order_qty)
+        VALUES (#{storeId}, #{productId}, #{currentStockQty}, #{safetyStockQty}, #{autoOrderQty})
+    </insert>
+
+    <insert id="insertInventoryLog" parameterType="map">
+        INSERT INTO inventory_logs (store_id, product_id, change_type, before_qty, change_qty, result_qty)
+        VALUES (#{storeId}, #{productId}, #{changeType}, #{beforeQty}, #{changeQty}, #{resultQty})
+    </insert>
+
+    <delete id="deleteInventory" parameterType="map">
+        DELETE FROM store_inventory 
+        WHERE store_id = #{storeId} AND product_id = #{productId}
+    </delete>
+
+    <select id="findInventoryLogs" resultType="com.brewflow.api.domain.InventoryLog">
+        SELECT l.*, p.name as productName
+        FROM inventory_logs l
+        JOIN products p ON l.product_id = p.product_id
+        WHERE l.store_id = #{storeId}
+        <if test="productId != null">
+            AND l.product_id = #{productId}
+        </if>
+        ORDER BY l.created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+    <select id="countInventoryLogs" resultType="long">
+        SELECT COUNT(*) FROM inventory_logs
+        WHERE store_id = #{storeId}
+        <if test="productId != null">
+            AND product_id = #{productId}
+        </if>
+    </select>
+</mapper>
