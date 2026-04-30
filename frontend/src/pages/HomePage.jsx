@@ -82,11 +82,17 @@ export default function HomePage() {
   const ProductCard = ({ product }) => {
     const isManagement = user?.role === 'HQ' || user?.role === 'SYSTEM';
 
+    const getImageUrl = (url) => {
+      if (!url) return null;
+      if (url.startsWith('http')) return url;
+      return url.startsWith('/') ? url : `/${url}`;
+    };
+
     const CardContent = (
       <div className={`flex-shrink-0 w-48 p-4 rounded-2xl bg-zinc-900/50 border border-zinc-800/50 transition-all group ${isManagement ? 'hover:border-violet-500/50 hover:bg-zinc-900 cursor-pointer hover:-translate-y-1' : ''}`}>
         <div className="aspect-square rounded-xl bg-zinc-800 mb-3 overflow-hidden flex items-center justify-center relative">
           {product.imageUrl ? (
-            <img src={`${API_BASE}/${product.imageUrl}`} alt={product.name} className="w-full h-full object-cover" />
+            <img src={getImageUrl(product.imageUrl)} alt={product.name} className="w-full h-full object-cover" />
           ) : (
             <div className="text-zinc-600 text-[10px] font-black uppercase tracking-tighter text-center px-2">
               {product.name}

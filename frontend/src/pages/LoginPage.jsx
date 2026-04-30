@@ -114,12 +114,6 @@ export default function LoginPage() {
             </Link>
           </p>
         </div>
-
-        <div className="mt-12 flex justify-center opacity-40">
-          <div className="rounded-full bg-zinc-800 px-3 py-1 text-[10px] uppercase tracking-widest text-zinc-400 border border-zinc-700">
-            API: {import.meta.env.VITE_API_BASE_URL || "http://localhost:8080"}
-          </div>
-        </div>
       </div>
     </div>
   );
