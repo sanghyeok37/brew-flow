@@ -48,6 +48,8 @@ export default function ProductManagementPage() {
     } catch (e) {
       alert("삭제 실패: " + (e.response?.data?.message || "알 수 없는 오류"));
     }
+  };
+
   const getImageUrl = (url) => {
     if (!url) return null;
     if (url.startsWith('http')) return url;
