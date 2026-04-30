@@ -4,6 +4,11 @@ WORKDIR /app
 COPY package.json package-lock.json /app/
 RUN npm ci
 COPY . /app/
+
+# 빌드 시점에 API Base URL 주입 (Nginx 프록시 사용 시 빈 값 혹은 /api 권장)
+ARG VITE_API_BASE_URL=""
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+
 RUN npm run build
 
 FROM nginx:1.27-alpine

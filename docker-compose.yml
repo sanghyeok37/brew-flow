@@ -1,0 +1,64 @@
+services:
+  db:
+    image: mysql:8.4
+    container_name: brewflow-mysql
+    command: ["mysqld", "--default-time-zone=+09:00", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_0900_ai_ci"]
+    restart: always
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-brew_flow}
+      MYSQL_USER: ${MYSQL_USER:-brewflow}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    image: ${DOCKERHUB_USERNAME}/brewflow-backend:latest
+    container_name: brewflow-backend
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DATASOURCE_URL: jdbc:mysql://db:3306/${MYSQL_DATABASE:-brew_flow}?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=Asia/Seoul
+      DATASOURCE_USERNAME: ${MYSQL_USER:-brewflow}
+      DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SERVER_PORT: 8080
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./uploads:/root/uploads
+
+  frontend:
+    image: ${DOCKERHUB_USERNAME}/brewflow-frontend:latest
+    container_name: brewflow-frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    volumes:
+      - ./uploads:/usr/share/nginx/html/uploads:ro
+
+volumes:
+  mysql_data:
+
+
+
+
+
+
