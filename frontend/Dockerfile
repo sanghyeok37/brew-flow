@@ -2,7 +2,7 @@ FROM node:22-alpine AS build
 WORKDIR /app
 
 COPY package.json package-lock.json /app/
-RUN npm ci
+RUN npm install
 COPY . /app/
 
 # 빌드 시점에 API Base URL 주입 (Nginx 프록시 사용 시 빈 값 혹은 /api 권장)
