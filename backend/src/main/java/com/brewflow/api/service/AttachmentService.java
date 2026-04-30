@@ -27,7 +27,7 @@ public class AttachmentService {
     @Value("${file.upload-path:brewflow_uploads/}")
     private String uploadRoot;
 
-    private final String userHome = System.getProperty("user.home");
+    // private final String userHome = System.getProperty("user.home"); // 삭제
 
     /**
      * 파일 저장 (Upload)
@@ -57,9 +57,14 @@ public class AttachmentService {
         String datePath = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         String relativePath = uploadRoot + category + "/" + datePath;
         
-        // 파일명 규칙: 카테고리_ID_원본명 (혹은 깔끔하게 ID_원본명)
-        String storedName = category + "_" + id + "_" + file.getOriginalFilename();
-        File directory = new File(userHome, relativePath);
+        // 파일명 규칙: 카테고리_ID_UUID.확장자 (한글 문제 원천 차단)
+        String originalName = file.getOriginalFilename();
+        String extension = "";
+        if (originalName != null && originalName.contains(".")) {
+            extension = originalName.substring(originalName.lastIndexOf("."));
+        }
+        String storedName = category + "_" + id + "_" + UUID.randomUUID().toString().substring(0, 8) + extension;
+        File directory = new File(relativePath);
         if (!directory.exists()) {
             directory.mkdirs();
         }
@@ -112,7 +117,7 @@ public class AttachmentService {
         }
 
         // 물리 파일 삭제
-        File target = new File(userHome, attachment.getFilePath());
+        File target = new File(attachment.getFilePath());
         if (target.exists()) {
             if (!target.delete()) {
                 log.warn("Failed to delete physical file: {}", target.getAbsolutePath());
