@@ -65,9 +65,10 @@ custom:
 
 logging:
   level:
-    root: WARN
-    com.brewflow.api: DEBUG
-    org.springframework.web: INFO
+    root: INFO
+    com.brewflow.api.mapper: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
     com.brewflow.api.mapper: DEBUG
 
 management:

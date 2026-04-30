@@ -11,7 +11,7 @@ CREATE TABLE stores (
     store_code  VARCHAR(20)  NOT NULL UNIQUE CHECK (REGEXP_LIKE(store_code, '^[A-Z0-9]{3}[0-9]{5}$')),
     -- 브랜드 코드 자동 추출 (DB 레벨 무결성 보장)
     brand_code  CHAR(3)      GENERATED ALWAYS AS (LEFT(store_code, 3)) STORED,
-    name        VARCHAR(120)  NOT NULL UNIQUE CHECK(REGEXP_LIKE(name, '^[가-힣a-zA-Z0-9 ().,\-]{3,40}$')),
+    name        VARCHAR(120)  NOT NULL UNIQUE CHECK(CHAR_LENGTH(name) >= 2),
     -- SYSTEM: 시스템(ADM12345), HQ: 본사(00000), STORE: 가맹점(그 외)
     type        VARCHAR(20)  NOT NULL DEFAULT 'STORE' CHECK (type IN ('SYSTEM', 'HQ', 'STORE')),
     status      VARCHAR(20)  NOT NULL DEFAULT 'OPEN' CHECK (status IN ('OPEN', 'CLOSED')),
@@ -22,11 +22,11 @@ CREATE TABLE stores (
 -- 2. 사용자 (Users)
 CREATE TABLE users (
     user_id     BIGINT AUTO_INCREMENT PRIMARY KEY,
-    username    VARCHAR(20)  NOT NULL UNIQUE CHECK(REGEXP_LIKE(username, '^[a-zA-Z][a-zA-Z0-9]{4,19}$')), 
-    name        VARCHAR(18)  NOT NULL CHECK(REGEXP_LIKE(name, '^[가-힣]{2,6}$')),
-    nickname    VARCHAR(30)  NOT NULL UNIQUE CHECK(REGEXP_LIKE(nickname, '^[가-힣a-zA-Z0-9]{2,10}$')),
-    contact     VARCHAR(11)  NOT NULL CHECK(REGEXP_LIKE(contact, '^010[0-9]{8}$')),
-    email       VARCHAR(100) NOT NULL UNIQUE CHECK(REGEXP_LIKE(email, '^[A-Za-z0-9.%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$')),
+    username    VARCHAR(20)  NOT NULL UNIQUE, 
+    name        VARCHAR(18)  NOT NULL,
+    nickname    VARCHAR(30)  NOT NULL UNIQUE,
+    contact     VARCHAR(11)  NOT NULL,
+    email       VARCHAR(100) NOT NULL UNIQUE,
     password    VARCHAR(255) NOT NULL,
     -- SUPER(전체 관리), ADMIN(브랜드 본사), USER(일반 점포)
     role        VARCHAR(20)  NOT NULL DEFAULT 'STORE' CHECK (role IN ('SYSTEM', 'HQ', 'STORE')),
