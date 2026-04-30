@@ -41,7 +41,7 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./uploads:/root/uploads
+      - ./uploads:/app/uploads
 
   frontend:
     image: ${DOCKERHUB_USERNAME}/brewflow-frontend:latest
@@ -52,7 +52,7 @@ services:
     depends_on:
       - backend
     volumes:
-      - ./uploads:/usr/share/nginx/html/uploads:ro
+      - ./uploads:/uploads:ro
 
 volumes:
   mysql_data:
