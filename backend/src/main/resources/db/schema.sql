@@ -2,6 +2,8 @@
 -- BrewFlow — 엔터프라이즈 프랜차이즈 재고 관리 시스템 DDL
 -- =====================================================
 
+SET NAMES utf8mb4;
+
 -- 1. 점포 (Stores)
 CREATE TABLE stores (
     store_id    BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -9,7 +11,7 @@ CREATE TABLE stores (
     store_code  VARCHAR(20)  NOT NULL UNIQUE CHECK (REGEXP_LIKE(store_code, '^[A-Z0-9]{3}[0-9]{5}$')),
     -- 브랜드 코드 자동 추출 (DB 레벨 무결성 보장)
     brand_code  CHAR(3)      GENERATED ALWAYS AS (LEFT(store_code, 3)) STORED,
-    name        VARCHAR(120)  NOT NULL UNIQUE CHECK(REGEXP_LIKE(name, '^[가-힣a-zA-Z0-9 ().,-]{3,40}$')),
+    name        VARCHAR(120)  NOT NULL UNIQUE CHECK(REGEXP_LIKE(name, '^[가-힣a-zA-Z0-9 ().,\-]{3,40}$')),
     -- SYSTEM: 시스템(ADM12345), HQ: 본사(00000), STORE: 가맹점(그 외)
     type        VARCHAR(20)  NOT NULL DEFAULT 'STORE' CHECK (type IN ('SYSTEM', 'HQ', 'STORE')),
     status      VARCHAR(20)  NOT NULL DEFAULT 'OPEN' CHECK (status IN ('OPEN', 'CLOSED')),

@@ -2,6 +2,8 @@
 -- BrewFlow Demo Data (DML)
 -- =====================================================
 
+SET NAMES utf8mb4;
+
 SET FOREIGN_KEY_CHECKS = 0;
 TRUNCATE TABLE po_weekly_stats;
 TRUNCATE TABLE inventory_logs;

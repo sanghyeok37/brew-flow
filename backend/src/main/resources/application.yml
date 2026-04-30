@@ -84,5 +84,4 @@ server:
   port: ${SERVER_PORT:8080}
 
 file:
-  upload-path: ${FILE_UPLOAD_PATH:uploads/}
-
+  upload-path: ${FILE_UPLOAD_PATH:uploads/}
