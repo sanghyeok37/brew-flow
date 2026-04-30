@@ -99,7 +99,7 @@ public class AuthServiceImpl implements AuthService {
 			throw new BusinessException(ErrorCode.CERT_EXPIRED);
 		}
 
-		String storeCode = request.getStoreCode();
+		String storeCode = request.getStoreCode().trim().toUpperCase();
 		UserRole role;
 		if ("ADM12345".equals(storeCode)) {
 			role = UserRole.SYSTEM;
