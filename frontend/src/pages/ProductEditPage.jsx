@@ -53,7 +53,8 @@ export default function ProductEditPage() {
         setUnit(p.unit);
         setUnitCost(p.unitCost);
         if (p.imageUrl) {
-          setPreview(`${API_BASE}/${p.imageUrl}`);
+          const cleanPath = p.imageUrl.startsWith('/') ? p.imageUrl : `/${p.imageUrl}`;
+          setPreview(cleanPath);
         }
       } catch (e) {
         setErr("상품 정보를 불러오지 못했습니다.");

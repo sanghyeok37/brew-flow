@@ -64,7 +64,8 @@ public class AttachmentService {
             extension = originalName.substring(originalName.lastIndexOf("."));
         }
         String storedName = category + "_" + id + "_" + UUID.randomUUID().toString().substring(0, 8) + extension;
-        File directory = new File(relativePath);
+        // 도커 환경의 작업 디렉토리인 /app을 기준으로 절대 경로 설정
+        File directory = new File("/app", relativePath);
         if (!directory.exists()) {
             directory.mkdirs();
         }
@@ -116,8 +117,8 @@ public class AttachmentService {
             return;
         }
 
-        // 물리 파일 삭제
-        File target = new File(attachment.getFilePath());
+        // 물리 파일 삭제 (절대 경로 사용)
+        File target = new File("/app", attachment.getFilePath());
         if (target.exists()) {
             if (!target.delete()) {
                 log.warn("Failed to delete physical file: {}", target.getAbsolutePath());

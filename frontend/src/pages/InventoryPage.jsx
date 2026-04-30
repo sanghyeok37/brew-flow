@@ -155,6 +155,12 @@ export default function InventoryPage() {
     }
   }, [updateData, storeId]);
 
+  const getImageUrl = (url) => {
+    if (!url) return null;
+    if (url.startsWith('http')) return url;
+    return url.startsWith('/') ? url : `/${url}`;
+  };
+
   if (!storeId) {
     return (
       <div className="flex flex-col items-center justify-center py-32 text-center animate-in fade-in zoom-in duration-500">
@@ -223,7 +229,7 @@ export default function InventoryPage() {
                     <div className="flex items-center gap-3">
                       <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900 transition-transform group-hover:scale-105">
                         <img
-                          src={r.imageUrl ? `${API_BASE}/${r.imageUrl}` : `https://ui-avatars.com/api/?name=${encodeURIComponent(r.productName)}&background=2e1065&color=ddd&bold=true`}
+                          src={r.imageUrl ? getImageUrl(r.imageUrl) : `https://ui-avatars.com/api/?name=${encodeURIComponent(r.productName)}&background=2e1065&color=ddd&bold=true`}
                           alt={r.productName}
                           className="h-full w-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
                         />

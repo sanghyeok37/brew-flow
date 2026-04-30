@@ -48,6 +48,10 @@ export default function ProductManagementPage() {
     } catch (e) {
       alert("삭제 실패: " + (e.response?.data?.message || "알 수 없는 오류"));
     }
+  const getImageUrl = (url) => {
+    if (!url) return null;
+    if (url.startsWith('http')) return url;
+    return url.startsWith('/') ? url : `/${url}`;
   };
 
   return (
@@ -91,7 +95,7 @@ export default function ProductManagementPage() {
                     <div className="flex items-center gap-5">
                       <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950 shadow-inner group-hover:border-violet-500/30 transition-colors">
                         <img
-                          src={p.imageUrl ? `${API_BASE}/${p.imageUrl}` : `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=18181b&color=444&bold=true`}
+                          src={p.imageUrl ? getImageUrl(p.imageUrl) : `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=18181b&color=444&bold=true`}
                           alt={p.name}
                           className="h-full w-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700"
                         />
